@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BigQuery Release Notes Hub</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="glow-container">
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+    </div>
+
+    <header class="app-header">
+        <div class="header-container">
+            <div class="brand-section">
+                <div class="logo-wrapper">
+                    <i class="fa-solid fa-database logo-icon"></i>
+                    <span class="logo-pulse"></span>
+                </div>
+                <div>
+                    <h1>BigQuery Release Notes</h1>
+                    <p class="subtitle">Stay updated with Google Cloud BigQuery features, changes, and fixes</p>
+                </div>
+            </div>
+            <div class="action-section">
+                <span id="last-updated-text" class="last-updated">Updating...</span>
+                <button id="refresh-btn" class="btn btn-primary" title="Refresh Release Notes">
+                    <i class="fa-solid fa-arrows-rotate spinner-icon" id="refresh-icon"></i>
+                    <span>Refresh Feed</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="app-main">
+        <!-- Dashboard Statistics Section -->
+        <section class="stats-section">
+            <div class="stat-card" data-filter="All">
+                <div class="stat-icon-wrapper val-all">
+                    <i class="fa-solid fa-list-check"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="stat-total">0</h3>
+                    <p>Total Updates</p>
+                </div>
+            </div>
+            <div class="stat-card" data-filter="Feature">
+                <div class="stat-icon-wrapper val-feature">
+                    <i class="fa-solid fa-star"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="stat-features">0</h3>
+                    <p>Features</p>
+                </div>
+            </div>
+            <div class="stat-card" data-filter="Change">
+                <div class="stat-icon-wrapper val-change">
+                    <i class="fa-solid fa-sliders"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="stat-changes">0</h3>
+                    <p>Changes</p>
+                </div>
+            </div>
+            <div class="stat-card" data-filter="Issue">
+                <div class="stat-icon-wrapper val-issue">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="stat-issues">0</h3>
+                    <p>Issues</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Search and Filter Section -->
+        <section class="filter-section">
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="search-input" placeholder="Search updates (e.g. Gemini, AI, ObjectRef, slots)..." autocomplete="off">
+                <button id="clear-search-btn" class="clear-btn" style="display: none;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="chips-container" id="chips-container">
+                <button class="chip active" data-type="All">All Updates</button>
+                <button class="chip" data-type="Feature">Features</button>
+                <button class="chip" data-type="Change">Changes</button>
+                <button class="chip" data-type="Issue">Issues</button>
+                <!-- Dynamic chips will be added here if other types exist -->
+            </div>
+        </section>
+
+        <!-- Release Notes Feed Section -->
+        <section class="feed-section">
+            <div class="loading-state" id="loading-state">
+                <div class="double-bounce-spinner">
+                    <div class="double-bounce1"></div>
+                    <div class="double-bounce2"></div>
+                </div>
+                <p>Fetching the latest BigQuery release notes...</p>
+            </div>
+
+            <div class="error-state" id="error-state" style="display: none;">
+                <i class="fa-solid fa-circle-exclamation error-icon"></i>
+                <h3>Oops! Something went wrong</h3>
+                <p id="error-message">Could not fetch updates at this time. Please try again later.</p>
+                <button id="retry-btn" class="btn btn-secondary">
+                    <i class="fa-solid fa-arrows-rotate"></i> Try Again
+                </button>
+            </div>
+
+            <div class="empty-state" id="empty-state" style="display: none;">
+                <i class="fa-solid fa-box-open empty-icon"></i>
+                <h3>No updates found</h3>
+                <p>Try refining your search terms or selecting a different filter.</p>
+                <button id="reset-filters-btn" class="btn btn-secondary">Reset Filters</button>
+            </div>
+
+            <div class="notes-grid" id="notes-grid">
+                <!-- Release Note Cards will be dynamically rendered here -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Tweet Customizer Modal -->
+    <div class="modal-overlay" id="tweet-modal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-brands fa-x-twitter tweet-brand-icon"></i>
+                    <h2>Compose Tweet</h2>
+                </div>
+                <button class="close-modal-btn" id="close-modal-btn">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-tip">Edit the template below before posting. Make sure to keep it under 280 characters!</p>
+                <div class="tweet-textarea-wrapper">
+                    <textarea id="tweet-textarea" rows="6" maxlength="500" placeholder="What's happening?"></textarea>
+                    <div class="character-progress-container">
+                        <span id="char-counter">0 / 280</span>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" id="char-progress"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tweet-preview-section">
+                    <span class="preview-label">Selected Update Source:</span>
+                    <div class="preview-update-card" id="modal-update-preview">
+                        <!-- Tiny preview card -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancel-tweet-btn">Cancel</button>
+                <button class="btn btn-tweet" id="post-tweet-btn">
+                    <i class="fa-brands fa-x-twitter"></i> Post to X
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <footer class="app-footer">
+        <p>&copy; 2026 BigQuery Release Notes Hub. Powered by Python Flask, Vanilla JS & CSS.</p>
+    </footer>
+
+    <!-- JS Code -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
